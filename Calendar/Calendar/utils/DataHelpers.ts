@@ -92,140 +92,140 @@ export function getFieldName(
 
 //returns all the calendar data including the events and resources
 export async function getCalendarData(
-    pcfContext: ComponentFramework.Context<IInputs>,
-    keys?: Keys
-  ): Promise<{
-    resources?: Resource[];
-    events: IEvent[];
-    keys?: Keys;
-  }> {
-    if (!keys) {
-      // If keys is undefined, return empty data
-      return { resources: undefined, events: [], keys: undefined };
-    }
-    const resourceData = await getResources(pcfContext, keys);
-    const eventData = await getEvents(pcfContext, resourceData, keys);
-  
-    //console.log(`getCalendarData: eventData.length: ${eventData?.length}`);
-    return { resources: resourceData, events: eventData, keys: keys };
+  pcfContext: ComponentFramework.Context<IInputs>,
+  keys?: Keys
+): Promise<{
+  resources?: Resource[];
+  events: IEvent[];
+  keys?: Keys;
+}> {
+  if (!keys) {
+    // If keys is undefined, return empty data
+    return { resources: undefined, events: [], keys: undefined };
   }
+  const resourceData = await getResources(pcfContext, keys);
+  const eventData = await getEvents(pcfContext, resourceData, keys);
+
+  //console.log(`getCalendarData: eventData.length: ${eventData?.length}`);
+  return { resources: resourceData, events: eventData, keys: keys };
+}
   
   //retrieves all the resources from the datasource
-  async function getResources(
-    pcfContext: ComponentFramework.Context<IInputs>,
-    keys: Keys
-  ): Promise<Resource[] | undefined> {
-    const dataSet = pcfContext.parameters.calendarDataSet;
-  
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const resources: any[] = [];
-    //if the user did not put in resource then do not add them to the calendar.
-    if (!keys.resource) return undefined;
-  
-    const totalRecordCount = dataSet.sortedRecordIds.length;
-  
-    for (let i = 0; i < totalRecordCount; i++) {
-      const recordId = dataSet.sortedRecordIds[i];
-      const record = dataSet.records[recordId] as DataSetInterfaces.EntityRecord;
-  
-      let resourceId = "";
-      let resourceName = "";
-      let resourceEtn = "";
-  
-      //if this is a Model app we will be using a lookup reference for the Resources
-      if (pcfContext.mode.allocatedHeight === -1) {
-        const resourceRef = record.getValue(
-          keys.resource
-        ) as ComponentFramework.EntityReference;
-        if (resourceRef) {
-          resourceId = resourceRef.id.guid;
-          resourceName =
-            keys.resourceName && keys.resourceName.indexOf(".") !== -1
-              ? (record.getValue(keys.resourceName) as string) || ""
-              : resourceRef.name;
-          resourceEtn = resourceRef.etn as string;
-        }
-      }
-      //otherwise this is canvas and the user has supplied the data.
-      else {
-        resourceId = (record.getValue(keys.resource) as string) || "";
-        resourceName = keys.resourceName
-          ? (record.getValue(keys.resourceName) as string)
-          : "";
-      }
-  
-      if (!resourceId) continue;
-  
-      resources.push({ id: resourceId, title: resourceName, etn: resourceEtn });
-    }
-  
-    if (
-      pcfContext.mode.allocatedHeight === -1 &&
-      keys.resource &&
-      keys.resourceGetAllInModel
-    ) {
-      await getAllResources(pcfContext, resources, keys);
-    }
-  
-    const distinctResources = [];
-    const map = new Map();
-    for (const item of resources) {
-      if (!map.has(item.id)) {
-        map.set(item.id, true);
-        distinctResources.push({
-          id: item.id,
-          title: item.title || "",
-        });
+async function getResources(
+  pcfContext: ComponentFramework.Context<IInputs>,
+  keys: Keys
+): Promise<Resource[] | undefined> {
+  const dataSet = pcfContext.parameters.calendarDataSet;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const resources: any[] = [];
+  //if the user did not put in resource then do not add them to the calendar.
+  if (!keys.resource) return undefined;
+
+  const totalRecordCount = dataSet.sortedRecordIds.length;
+
+  for (let i = 0; i < totalRecordCount; i++) {
+    const recordId = dataSet.sortedRecordIds[i];
+    const record = dataSet.records[recordId] as DataSetInterfaces.EntityRecord;
+
+    let resourceId = "";
+    let resourceName = "";
+    let resourceEtn = "";
+
+    //if this is a Model app we will be using a lookup reference for the Resources
+    if (pcfContext.mode.allocatedHeight === -1) {
+      const resourceRef = record.getValue(
+        keys.resource
+      ) as ComponentFramework.EntityReference;
+      if (resourceRef) {
+        resourceId = resourceRef.id.guid;
+        resourceName =
+          keys.resourceName && keys.resourceName.indexOf(".") !== -1
+            ? (record.getValue(keys.resourceName) as string) || ""
+            : resourceRef.name;
+        resourceEtn = resourceRef.etn as string;
       }
     }
-  
-    return distinctResources;
+    //otherwise this is canvas and the user has supplied the data.
+    else {
+      resourceId = (record.getValue(keys.resource) as string) || "";
+      resourceName = keys.resourceName
+        ? (record.getValue(keys.resourceName) as string)
+        : "";
+    }
+
+    if (!resourceId) continue;
+
+    resources.push({ id: resourceId, title: resourceName, etn: resourceEtn });
   }
-  
-  export async function getAllResources(
-    pcfContext: ComponentFramework.Context<IInputs>,
-    resources: Resource[],
-    keys: Keys
-  ): Promise<void> {
-    if (!keys || !keys.resourceName || !keys.resourceEtn || !keys.resourceId) {
-      return;
-    }
-  
-    const resourceName =
-      keys.resourceName.indexOf(".") === -1
-        ? keys.resourceName
-        : keys.resourceName.split(".")[1];
-    const options = keys.resourceName ? `?$select=${resourceName}` : undefined;
-  
-    //retrieve all the resources
-    const allResources = await pcfContext.webAPI.retrieveMultipleRecords(
-      keys.resourceEtn,
-      options,
-      5000
-    );
-  
-    //loop through and push them to the resources array
-    allResources.entities.forEach((e) => {
-      if (keys.resourceId && resourceName in e && keys.resourceId in e) {
-        resources.push({
-          id: e[keys.resourceId],
-          title: e[resourceName],
-        });
-      }
-    });
+
+  if (
+    pcfContext.mode.allocatedHeight === -1 &&
+    keys.resource &&
+    keys.resourceGetAllInModel
+  ) {
+    await getAllResources(pcfContext, resources, keys);
   }
-  
-  //retrieves all the events from the datasource
-  export async function getEvents(
-    pcfContext: ComponentFramework.Context<IInputs>,
-    resources: Resource[] | undefined,
-    keys: Keys
-  ): Promise<IEvent[]> {
-    const dataSet = pcfContext.parameters.calendarDataSet;
-    const totalRecordCount = dataSet.sortedRecordIds.length;
-  
-    const newEvents: IEvent[] = [];
-  
+
+  const distinctResources = [];
+  const map = new Map();
+  for (const item of resources) {
+    if (!map.has(item.id)) {
+      map.set(item.id, true);
+      distinctResources.push({
+        id: item.id,
+        title: item.title || "",
+      });
+    }
+  }
+
+  return distinctResources;
+}
+
+export async function getAllResources(
+  pcfContext: ComponentFramework.Context<IInputs>,
+  resources: Resource[],
+  keys: Keys
+): Promise<void> {
+  if (!keys || !keys.resourceName || !keys.resourceEtn || !keys.resourceId) {
+    return;
+  }
+
+  const resourceName =
+    keys.resourceName.indexOf(".") === -1
+      ? keys.resourceName
+      : keys.resourceName.split(".")[1];
+  const options = keys.resourceName ? `?$select=${resourceName}` : undefined;
+
+  //retrieve all the resources
+  const allResources = await pcfContext.webAPI.retrieveMultipleRecords(
+    keys.resourceEtn,
+    options,
+    5000
+  );
+
+  //loop through and push them to the resources array
+  allResources.entities.forEach((e) => {
+    if (keys.resourceId && resourceName in e && keys.resourceId in e) {
+      resources.push({
+        id: e[keys.resourceId],
+        title: e[resourceName],
+      });
+    }
+  });
+}
+
+//retrieves all the events from the datasource
+export async function getEvents(
+  pcfContext: ComponentFramework.Context<IInputs>,
+  resources: Resource[] | undefined,
+  keys: Keys
+): Promise<IEvent[]> {
+  const dataSet = pcfContext.parameters.calendarDataSet;
+  const totalRecordCount = dataSet.sortedRecordIds.length;
+
+  const newEvents: IEvent[] = [];
+
   for (let i = 0; i < totalRecordCount; i++) {
     const recordId = dataSet.sortedRecordIds[i];
     const record = dataSet.records[recordId] as DataSetInterfaces.EntityRecord;
@@ -278,6 +278,6 @@ export async function getCalendarData(
 
     newEvents.push(newEvent);
   }
-    console.log(`getEvents: newEvents.length: ${newEvents.length}`);
-    return newEvents;
-  }
+  console.log(`getEvents: newEvents.length: ${newEvents.length}`);
+  return newEvents;
+}
