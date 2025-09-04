@@ -63,6 +63,9 @@ export async function getKeys(
     eventColor: params.eventColor.raw
       ? getFieldName(dataSet, params.eventColor.raw)
       : "",
+    eventTypeField: params.eventTypeField.raw
+      ? getFieldName(dataSet, params.eventTypeField.raw)
+      : "",
     resource: resource,
     resourceName: resourceName,
     resourceId: resourceId,
@@ -273,6 +276,36 @@ export async function getEvents(
           pcfContext.mode.allocatedHeight === -1
             ? (resourceId as ComponentFramework.EntityReference).id.guid
             : (resourceId as string);
+      }
+    }
+
+    // Add event type field if specified
+    if (keys.eventTypeField) {
+      const eventTypeValue = record.getValue(keys.eventTypeField);
+      console.log(`Event ${recordId}: eventTypeField = ${keys.eventTypeField}, value =`, eventTypeValue);
+      if (eventTypeValue) {
+        // Handle event type similar to how we handle resources
+        if (pcfContext.mode.allocatedHeight === -1) {
+          // Model app - likely a lookup field
+          const eventTypeRef = eventTypeValue as ComponentFramework.EntityReference;
+          if (eventTypeRef) {
+            newEvent.eventTypeId = eventTypeRef.id.guid;
+            newEvent.eventTypeName = eventTypeRef.name;
+            // Store the full eventTypeField with both id and name for filtering
+            newEvent[keys.eventTypeField] = {
+              id: eventTypeRef.id.guid,
+              name: eventTypeRef.name
+            };
+            console.log(`Stored event type for ${recordId}:`, newEvent[keys.eventTypeField]);
+          }
+        } else {
+          // Canvas app - direct value
+          newEvent.eventTypeId = eventTypeValue as string;
+          newEvent.eventTypeName = eventTypeValue as string;
+          // Store the eventTypeField for filtering
+          newEvent[keys.eventTypeField] = eventTypeValue;
+          console.log(`Stored event type for ${recordId}:`, newEvent[keys.eventTypeField]);
+        }
       }
     }
 

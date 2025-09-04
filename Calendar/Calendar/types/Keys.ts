@@ -5,6 +5,7 @@ export interface Keys {
   start: string;
   end: string;
   eventColor?: string;
+  eventTypeField?: string;
   resource?: string;
   resourceName?: string;
   resourceId?: string;

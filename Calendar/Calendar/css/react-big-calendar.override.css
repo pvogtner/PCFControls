@@ -6,6 +6,136 @@
   font-weight: normal;
 }
 
+/* Resource and Event Type Filter Styles */
+.resource-filter-dropdown:hover,
+.resource-filter-dropdown:focus,
+.event-type-filter-dropdown:hover,
+.event-type-filter-dropdown:focus {
+  border-color: #0078d4;
+  box-shadow: 0 0 0 1px #0078d4;
+}
+
+.resource-filter-clear-btn:hover,
+.event-type-filter-clear-btn:hover {
+  background-color: #f3f2f1;
+  border-color: #8a8886;
+}
+
+/* Fix for calendar container scrolling and responsiveness */
+.rbc-calendar {
+  height: auto !important;
+  min-height: 400px !important;
+  overflow: visible !important;
+}
+
+/* Ensure the main calendar container is scrollable */
+.rbc-calendar .rbc-month-view,
+.rbc-calendar .rbc-time-view,
+.rbc-calendar .rbc-agenda-view {
+  overflow: visible !important;
+  height: auto !important;
+}
+
+/* Month view specific fixes */
+.rbc-month-view {
+  min-height: 500px !important;
+  height: auto !important;
+}
+
+.rbc-month-row {
+  min-height: 80px !important;
+  height: auto !important;
+  flex: 1 1 auto !important;
+}
+
+.rbc-row-content {
+  min-height: 80px !important;
+  height: auto !important;
+}
+
+.rbc-date-cell {
+  min-height: 80px !important;
+  height: auto !important;
+}
+
+.rbc-day-bg {
+  min-height: 80px !important;
+  height: auto !important;
+}
+
+/* Week and Day view fixes */
+.rbc-time-view {
+  min-height: 600px !important;
+  height: auto !important;
+}
+
+/* Agenda view fixes */
+.rbc-agenda-view {
+  min-height: 400px !important;
+  height: auto !important;
+}
+
+/* Fix for popup/overlay positioning and z-index */
+.rbc-overlay {
+  position: fixed !important;
+  z-index: 9999 !important;
+  background: white !important;
+  border: 1px solid rgb(var(--calendar-border-color)) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 4px !important;
+  max-width: 300px !important;
+  max-height: 400px !important;
+  overflow-y: auto !important;
+}
+
+.rbc-overlay-header {
+  background-color: #f8f9fa !important;
+  padding: 8px 12px !important;
+  border-bottom: 1px solid rgb(var(--calendar-border-color)) !important;
+  font-weight: 600 !important;
+}
+
+/* Ensure show more button is clickable and popup works */
+.rbc-show-more {
+  cursor: pointer !important;
+  z-index: 10 !important;
+  position: relative !important;
+  pointer-events: auto !important;
+  user-select: none !important;
+}
+
+.rbc-show-more:hover {
+  color: rgba(var(--calendar-text-color), 0.8) !important;
+  text-decoration: underline !important;
+}
+
+/* Ensure calendar container doesn't block events */
+.rbc-calendar {
+  pointer-events: auto !important;
+}
+
+.rbc-month-view {
+  pointer-events: auto !important;
+}
+
+.rbc-date-cell {
+  pointer-events: auto !important;
+}
+
+/* Fix popup positioning to work with scrollable containers */
+.rbc-overlay {
+  position: absolute !important;
+  z-index: 9999 !important;
+  background: white !important;
+  border: 1px solid rgb(var(--calendar-border-color)) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 4px !important;
+  max-width: 300px !important;
+  max-height: 400px !important;
+  overflow-y: auto !important;
+  pointer-events: auto !important;
+}
+
 .rbc-toolbar {
   flex-wrap: nowrap !important;
   flex-direction: row !important;

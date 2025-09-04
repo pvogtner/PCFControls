@@ -5,4 +5,8 @@ export interface IEvent extends Event {
   id?: string;
   color?: string;
   description?: string;
+  eventTypeId?: string;
+  eventTypeName?: string;
+  // Allow for additional dynamic properties like event types, resources, etc.
+  [key: string]: unknown;
 }

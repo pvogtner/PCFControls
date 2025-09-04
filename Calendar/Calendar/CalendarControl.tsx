@@ -20,11 +20,13 @@ import { StartOfWeek } from "date-arithmetic";
 import { IEvent, Resource } from "./types";
 import GetMessages from "./components/Translations";
 import * as moment from "moment";
-import { useCalendarHourRange, useDayLayoutAlgorithm, useEventSelectable, useCalendarSelectable, useCalendarStepAndTimeslots, useCalendarDate, useCalendarPopup, useEventHeaderFormat, useCalendarView, useCalendarData, useCalendarColors } from "./hooks";
+import { useCalendarHourRange, useDayLayoutAlgorithm, useEventSelectable, useCalendarSelectable, useCalendarStepAndTimeslots, useCalendarDate, useCalendarPopup, useEventHeaderFormat, useCalendarView, useCalendarData, useCalendarColors, useResourceFilter, useEventTypeFilter } from "./hooks";
 import { eventPropsGetter, dayPropsGetter } from "./getters";
 import { handleSlotSelect, handleEventSelected, handleEventKeyPress, handleOnView, handleNavigate } from "./handlers";
 import { timeGutterHeaderRenderer, resourceHeaderRenderer, agendaEventRenderer,timeSlotWrapperRenderer } from "./renderers";
 import { tooltipAccessor } from "./accessors/tooltipAccessor";
+import { ResourceFilter } from "./components/ResourceFilter";
+import { EventTypeFilter } from "./components/EventTypeFilter";
 export interface IProps {
   pcfContext: ComponentFramework.Context<IInputs>;
   onClickSelectedRecord: (recordId: string) => void;
@@ -102,6 +104,14 @@ export const CalendarControl: React.FC<IProps> = (props) => {
   const calendarRef = React.useRef(null);
   const [calendarData, setCalendarData] = useCalendarData(props.pcfContext);
 
+  // Add resource filter functionality
+  const resourceField = props.pcfContext.parameters.resourceField?.raw || null;
+  const [filteredCalendarData, setSelectedResourceId] = useResourceFilter(calendarData, resourceField);
+
+  // Add event type filter functionality
+  const eventTypeField = calendarData.keys?.eventTypeField || null;
+  const [eventTypeFilteredData, setSelectedEventType] = useEventTypeFilter(filteredCalendarData, eventTypeField);
+
   React.useEffect(() => {
     if (calendarDate && calendarView) {
       _onCalendarChange();
@@ -129,7 +139,10 @@ export const CalendarControl: React.FC<IProps> = (props) => {
   // Use handleSlotSelect from handlers
   // Adapter function to ensure correct typing for react-big-calendar
   const _handleSlotSelect = (slotInfo: SlotInfo) =>
-    handleSlotSelect(props.onClickSlot, props.pcfContext, calendarData)({
+    handleSlotSelect(props.onClickSlot, props.pcfContext, {
+      keys: calendarData.keys,
+      resources: filteredCalendarData.resources
+    })({
       ...slotInfo,
       resourceId: slotInfo.resourceId ? String(slotInfo.resourceId) : undefined,
     });
@@ -178,81 +191,84 @@ export const CalendarControl: React.FC<IProps> = (props) => {
     return timeGutterHeaderRenderer(ref);
   };
 
-  return !calendarData?.resources ? (
-    <Calendar
-      selectable={calendarSelectable}
-      popup={calendarPopup}
-      localizer={localizer}
-      date={calendarDate}
-      culture={calendarCulture}
-      rtl={calendarRtl}
-      messages={calendarMessages}
-      defaultView={calendarView}
-      view={calendarView}
-      views={calendarViews}
-      scrollToTime={calendarScrollTo}
-      min={min}
-      max={max}
-      step={step} // Controls the interval in minutes for each time slot
-      timeslots={timeslots} // Number of slots per hour
-      dayLayoutAlgorithm={dayLayoutAlgorithm}
-      events={calendarData.events}
-      onSelectEvent={_handleEventSelected}
-      onKeyPressEvent={_handleEventKeyPress}
-      onSelectSlot={_handleSlotSelect}
-      onNavigate={_handleNavigate}
-      onView={_handleOnView}
-      ref={calendarRef}
-      className={`rbc-view-${calendarView}`}
-      eventPropGetter={_eventPropsGetter}
-      dayPropGetter={_dayPropsGetter}
-      tooltipAccessor={tooltipAccessor}
-      components={{
-        agenda: {
-          event: agendaEvent,
-        },
-        timeGutterHeader: timeGutterHeader,
-        timeSlotWrapper: (props) => timeSlotWrapperRenderer({ ...props, timeslots }),
-      }}
-    />
-  ) : (
-    <Calendar
-      selectable={calendarSelectable}
-      popup={calendarPopup}
-      localizer={localizer}
-      date={calendarDate}
-      culture={calendarCulture}
-      messages={calendarMessages}
-      defaultView={calendarView}
-      view={calendarView}
-      views={calendarViews}
-      scrollToTime={calendarScrollTo}
-      min={min}
-      max={max}
-      step={step} // Controls the interval in minutes for each time slot
-      timeslots={timeslots} // Number of slots per hour
-      dayLayoutAlgorithm={dayLayoutAlgorithm}
-      events={calendarData.events}
-      onSelectEvent={_handleEventSelected}
-      onKeyPressEvent={_handleEventKeyPress}
-      onSelectSlot={_handleSlotSelect}
-      onNavigate={_handleNavigate}
-      onView={_handleOnView}
-      resources={calendarData.resources}
-      resourceAccessor="resource"
-      ref={calendarRef}
-      className={`rbc-view-${calendarView}`}
-      eventPropGetter={_eventPropsGetter}
-      dayPropGetter={_dayPropsGetter}
-      tooltipAccessor={tooltipAccessor}
-      components={{
-        agenda: {
-          event: agendaEvent,
-        },
-        resourceHeader: resourceHeader,
-        timeGutterHeader: timeGutterHeader,
-        timeSlotWrapper: (props) => timeSlotWrapperRenderer({ ...props, timeslots }),
-      }}
-    />
+  return (
+    <div style={{ height: '100%', overflow: 'auto', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+      {/* Show filters side by side if we have resources or event types */}
+      {((filteredCalendarData.resources && filteredCalendarData.resources.length > 0) || 
+        (eventTypeFilteredData.eventTypes && eventTypeFilteredData.eventTypes.length > 0)) && (
+        <div style={{ 
+          flexShrink: 0, 
+          display: 'flex', 
+          gap: '16px', 
+          flexWrap: 'wrap',
+          marginBottom: '12px'
+        }}>
+          {/* Resource filter */}
+          {filteredCalendarData.resources && filteredCalendarData.resources.length > 0 && (
+            <div style={{ flex: '1', minWidth: '250px' }}>
+              <ResourceFilter
+                resources={filteredCalendarData.resources}
+                selectedResourceId={filteredCalendarData.selectedResourceId}
+                onResourceChange={setSelectedResourceId}
+                calendarTextColor={calendarTextColor.hex()}
+                calendarBorderColor={calendarBorderColor.hex()}
+              />
+            </div>
+          )}
+          
+          {/* Event type filter */}
+          {eventTypeFilteredData.eventTypes && eventTypeFilteredData.eventTypes.length > 0 && (
+            <div style={{ flex: '1', minWidth: '250px' }}>
+              <EventTypeFilter
+                eventTypes={eventTypeFilteredData.eventTypes}
+                selectedEventType={eventTypeFilteredData.selectedEventType}
+                onEventTypeChange={setSelectedEventType}
+                calendarTextColor={calendarTextColor.hex()}
+                calendarBorderColor={calendarBorderColor.hex()}
+              />
+            </div>
+          )}
+        </div>
+      )}
+      
+      <div style={{ flex: 1, overflow: 'auto', minHeight: 0, position: 'relative' }}>
+        <Calendar
+          selectable={calendarSelectable}
+          popup={true}
+          localizer={localizer}
+          date={calendarDate}
+          culture={calendarCulture}
+          rtl={calendarRtl}
+          messages={calendarMessages}
+          defaultView={calendarView}
+          view={calendarView}
+          views={calendarViews}
+          scrollToTime={calendarScrollTo}
+          min={min}
+          max={max}
+          step={step}
+          timeslots={timeslots}
+          dayLayoutAlgorithm={dayLayoutAlgorithm}
+          events={eventTypeFilteredData.events}
+          onSelectEvent={_handleEventSelected}
+          onKeyPressEvent={_handleEventKeyPress}
+          onSelectSlot={_handleSlotSelect}
+          onNavigate={_handleNavigate}
+          onView={_handleOnView}
+          ref={calendarRef}
+          className={`rbc-view-${calendarView}`}
+          eventPropGetter={_eventPropsGetter}
+          dayPropGetter={_dayPropsGetter}
+          tooltipAccessor={tooltipAccessor}
+          components={{
+            agenda: {
+              event: agendaEvent,
+            },
+            timeGutterHeader: timeGutterHeader,
+            timeSlotWrapper: (props) => timeSlotWrapperRenderer({ ...props, timeslots }),
+          }}
+        />
+      </div>
+    </div>
   );
 };

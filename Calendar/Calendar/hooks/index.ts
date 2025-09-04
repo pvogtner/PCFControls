@@ -9,3 +9,6 @@ export * from "./useEventHeaderFormat";
 export * from "./useCalendarView";
 export * from "./useCalendarData";
 export * from "./useCalendarColors";
+export * from "./useResourceFilter";
+export * from "./useEventTypeFilter";
+export * from "./useMaxEventsPerDay";
