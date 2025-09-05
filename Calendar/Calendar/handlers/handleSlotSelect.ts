@@ -3,6 +3,31 @@ import { Resource, Keys } from "../types";
 import { SlotInfo as RBCSlotInfo } from "react-big-calendar";
 import { IInputs } from "../generated/ManifestTypes";
 
+// Type declarations for Xrm API
+interface XrmPageInput {
+  pageType: string;
+  entityName: string;
+  entityId?: string;
+  data?: Record<string, string>;
+}
+
+interface XrmNavigationOptions {
+  target: number;
+  height?: { value: number; unit: string };
+  width?: { value: number; unit: string };
+  position?: number;
+}
+
+declare global {
+  interface Window {
+    Xrm?: {
+      Navigation?: {
+        navigateTo: (pageInput: XrmPageInput, navigationOptions?: XrmNavigationOptions) => Promise<void>;
+      };
+    };
+  }
+}
+
 // Accepts the normalized SlotInfo with resourceId as string | undefined
 export interface SlotInfo extends Omit<RBCSlotInfo, "resourceId"> {
     resourceId?: string;
@@ -55,14 +80,52 @@ export function handleSlotSelect(
                 }
             }
 
-            pcfContext.navigation.openForm(
-                {
-                    entityName:
-                        pcfContext.parameters.calendarDataSet.getTargetEntityType() || "",
-                    openInNewWindow: false,
-                },
-                newRecordProperties
-            );
+            // Use Xrm.Navigation.navigateTo for modal dialog with fallback to openForm
+            const pageInput: XrmPageInput = {
+                pageType: "entityrecord",
+                entityName: pcfContext.parameters.calendarDataSet.getTargetEntityType() || "",
+                data: newRecordProperties
+            };
+
+            const navigationOptions: XrmNavigationOptions = {
+                target: 2, // Open in dialog
+                height: { value: 60, unit: "%" },
+                width: { value: 60, unit: "%" },
+                position: 1 // Centered
+            };
+
+            navigateToNewRecord(pageInput, navigationOptions, pcfContext, newRecordProperties);
         }
     };
+}
+
+// Helper function to navigate to new record
+function navigateToNewRecord(
+    pageInput: XrmPageInput,
+    navigationOptions: XrmNavigationOptions,
+    pcfContext: ComponentFramework.Context<IInputs>,
+    fallbackProperties: { [key: string]: string }
+): void {
+    if (window.Xrm && window.Xrm.Navigation && window.Xrm.Navigation.navigateTo) {
+        void window.Xrm.Navigation.navigateTo(pageInput, navigationOptions)
+            .catch(() => {
+                // Fallback to openForm if navigateTo fails
+                pcfContext.navigation.openForm(
+                    {
+                        entityName: pageInput.entityName,
+                        openInNewWindow: false,
+                    },
+                    fallbackProperties
+                );
+            });
+    } else {
+        // Fallback to openForm if Xrm.Navigation is not available
+        pcfContext.navigation.openForm(
+            {
+                entityName: pageInput.entityName,
+                openInNewWindow: false,
+            },
+            fallbackProperties
+        );
+    }
 }
