@@ -107,8 +107,28 @@ function navigateToNewRecord(
     pcfContext: ComponentFramework.Context<IInputs>,
     fallbackProperties: { [key: string]: string }
 ): void {
+    const registerFocusRefresh = () => {
+        let fired = false;
+        const handler = () => {
+            if (fired) return;
+            fired = true;
+            window.removeEventListener("focus", handler, true);
+            window.setTimeout(() => {
+                try { pcfContext.parameters.calendarDataSet.refresh(); } catch { /* ignore */ }
+            }, 450);
+        };
+        window.addEventListener("focus", handler, true);
+    };
+
     if (window.Xrm && window.Xrm.Navigation && window.Xrm.Navigation.navigateTo) {
+        registerFocusRefresh();
         void window.Xrm.Navigation.navigateTo(pageInput, navigationOptions)
+            .then(() => {
+                // Secondary refresh in case promise resolves after close
+                window.setTimeout(() => {
+                    try { pcfContext.parameters.calendarDataSet.refresh(); } catch { /* ignore */ }
+                }, 550);
+            })
             .catch(() => {
                 // Fallback to openForm if navigateTo fails
                 pcfContext.navigation.openForm(

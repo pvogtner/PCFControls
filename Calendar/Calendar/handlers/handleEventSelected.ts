@@ -32,8 +32,31 @@ function navigateToRecord(
   pcfContext: ComponentFramework.Context<IInputs>,
   eventId: string
 ): void {
+  // Register a one-time focus listener to refresh dataset when dialog closes (focus returns)
+  const registerFocusRefresh = () => {
+    let fired = false;
+    const handler = () => {
+      if (fired) return;
+      fired = true;
+      window.removeEventListener("focus", handler, true);
+      // Delay slightly to allow platform to persist changes
+      window.setTimeout(() => {
+        try {
+          pcfContext.parameters.calendarDataSet.refresh();
+        } catch { /* ignore */ }
+      }, 400);
+    };
+    window.addEventListener("focus", handler, true);
+  };
+
   if (typeof window.Xrm !== 'undefined' && window.Xrm.Navigation) {
-    window.Xrm.Navigation.navigateTo(pageInput, navigationOptions).catch(() => {
+    registerFocusRefresh();
+    window.Xrm.Navigation.navigateTo(pageInput, navigationOptions).then(() => {
+      // Some environments may resolve the promise after close; do a secondary timed refresh
+      window.setTimeout(() => {
+        try { pcfContext.parameters.calendarDataSet.refresh(); } catch { /* ignore */ }
+      }, 500);
+    }).catch(() => {
       // Fallback to openForm on error
       pcfContext.navigation.openForm({
         entityId: eventId,
