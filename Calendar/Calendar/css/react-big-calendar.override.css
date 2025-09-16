@@ -22,44 +22,59 @@
 }
 
 /* Fix for calendar container scrolling and responsiveness */
+/* Make calendar a flex column so month view can stretch and rows divide space */
 .rbc-calendar {
-  height: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important; /* parent container supplies overall height */
   min-height: 400px !important;
-  overflow: visible !important;
+  overflow: hidden !important;
 }
 
 /* Ensure the main calendar container is scrollable */
+/* Let internal views flex to consume remaining height */
 .rbc-calendar .rbc-month-view,
 .rbc-calendar .rbc-time-view,
 .rbc-calendar .rbc-agenda-view {
-  overflow: visible !important;
-  height: auto !important;
+  flex: 1 1 auto !important;
+  overflow: hidden !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
 /* Month view specific fixes */
+/* Month view fills the vertical space provided by calendar */
 .rbc-month-view {
-  min-height: 500px !important;
-  height: auto !important;
+  min-height: 0 !important;
+  height: 100% !important;
 }
 
+/* Each month row flexes equally to divide available month height */
 .rbc-month-row {
-  min-height: 80px !important;
+  flex: 1 1 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
   height: auto !important;
-  flex: 1 1 auto !important;
 }
 
+/* Event container inside row should stretch */
 .rbc-row-content {
-  min-height: 80px !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
   height: auto !important;
 }
 
+/* Date cells inherit height from background cell; ensure content fills */
 .rbc-date-cell {
-  min-height: 80px !important;
+  min-height: 0 !important;
   height: auto !important;
 }
 
+/* Background day cells stretch with row via table-like layout; override fixed heights */
 .rbc-day-bg {
-  min-height: 80px !important;
+  min-height: 0 !important;
   height: auto !important;
 }
 
