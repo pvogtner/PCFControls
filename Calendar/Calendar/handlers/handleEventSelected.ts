@@ -69,7 +69,8 @@ export function handleEventSelected(
       const pageInput: XrmPageInput = {
         pageType: "entityrecord",
         entityName: pcfContext.parameters.calendarDataSet.getTargetEntityType(),
-        entityId: eventId
+        entityId: eventId,
+        data: { "dcg_formparam_showTabNav": "true" }
       };
 
       const navigationOptions: XrmNavigationOptions = {

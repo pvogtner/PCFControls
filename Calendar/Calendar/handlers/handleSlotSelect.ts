@@ -49,6 +49,7 @@ export function handleSlotSelect(
 
         if (pcfContext.mode.allocatedHeight === -1) {
             const newRecordProperties: { [key: string]: string } = {};
+            newRecordProperties["dcg_formparam_showTabNav"] = "true";
 
             if (calendarData.keys?.start) {
                 newRecordProperties[calendarData.keys.start] =
