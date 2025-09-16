@@ -124,13 +124,12 @@ function navigateToNewRecord(
         registerFocusRefresh();
         void window.Xrm.Navigation.navigateTo(pageInput, navigationOptions)
             .then(() => {
-                // Secondary refresh in case promise resolves after close
                 window.setTimeout(() => {
                     try { pcfContext.parameters.calendarDataSet.refresh(); } catch { /* ignore */ }
                 }, 550);
+                return undefined;
             })
             .catch(() => {
-                // Fallback to openForm if navigateTo fails
                 pcfContext.navigation.openForm(
                     {
                         entityName: pageInput.entityName,
@@ -138,6 +137,7 @@ function navigateToNewRecord(
                     },
                     fallbackProperties
                 );
+                return undefined;
             });
     } else {
         // Fallback to openForm if Xrm.Navigation is not available

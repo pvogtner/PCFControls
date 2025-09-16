@@ -52,10 +52,10 @@ function navigateToRecord(
   if (typeof window.Xrm !== 'undefined' && window.Xrm.Navigation) {
     registerFocusRefresh();
     window.Xrm.Navigation.navigateTo(pageInput, navigationOptions).then(() => {
-      // Some environments may resolve the promise after close; do a secondary timed refresh
       window.setTimeout(() => {
         try { pcfContext.parameters.calendarDataSet.refresh(); } catch { /* ignore */ }
       }, 500);
+      return undefined;
     }).catch(() => {
       // Fallback to openForm on error
       pcfContext.navigation.openForm({
@@ -63,6 +63,7 @@ function navigateToRecord(
         entityName: pcfContext.parameters.calendarDataSet.getTargetEntityType(),
         openInNewWindow: false,
       });
+      return undefined;
     });
   } else {
     // Fallback to original openForm if Xrm.Navigation is not available
