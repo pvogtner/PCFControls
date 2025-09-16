@@ -25,15 +25,12 @@ export function useEventTypeFilter(
       return [];
     }
 
-    console.log('Event Type Field:', eventTypeField);
-    console.log('Sample Event:', calendarData.events[0]);
-    console.log('Event Keys:', calendarData.events[0] ? Object.keys(calendarData.events[0]) : 'No events');
 
     const typeMap = new Map<string, string>();
     
     calendarData.events.forEach(event => {
       const typeValue = event[eventTypeField];
-      console.log(`Event ${event.id}: ${eventTypeField} =`, typeValue);
+  // removed debug log per cleanup request
       if (typeValue) {
         // Handle both string values and objects (for lookups)
         const typeId = typeof typeValue === 'object' && typeValue && 'id' in typeValue 

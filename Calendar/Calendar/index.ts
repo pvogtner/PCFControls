@@ -124,7 +124,6 @@ export class Calendar implements ComponentFramework.StandardControl<IInputs, IOu
 		}
 		
 		this._props.pcfContext = context;
-		//console.log(`updateView: dataSet.sortedRecordIds.length:  ${context.parameters.calendarDataSet.sortedRecordIds.length}`)
 
 		ReactDOM.render(
 			React.createElement(

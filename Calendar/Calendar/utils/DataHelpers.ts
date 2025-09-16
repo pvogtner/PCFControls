@@ -109,7 +109,6 @@ export async function getCalendarData(
   const resourceData = await getResources(pcfContext, keys);
   const eventData = await getEvents(pcfContext, resourceData, keys);
 
-  //console.log(`getCalendarData: eventData.length: ${eventData?.length}`);
   return { resources: resourceData, events: eventData, keys: keys };
 }
   
@@ -282,7 +281,7 @@ export async function getEvents(
     // Add event type field if specified
     if (keys.eventTypeField) {
       const eventTypeValue = record.getValue(keys.eventTypeField);
-      console.log(`Event ${recordId}: eventTypeField = ${keys.eventTypeField}, value =`, eventTypeValue);
+  // removed debug log: event type value for record
       if (eventTypeValue) {
         // Handle event type similar to how we handle resources
         if (pcfContext.mode.allocatedHeight === -1) {
@@ -296,7 +295,7 @@ export async function getEvents(
               id: eventTypeRef.id.guid,
               name: eventTypeRef.name
             };
-            console.log(`Stored event type for ${recordId}:`, newEvent[keys.eventTypeField]);
+            // removed debug log: stored event type for record
           }
         } else {
           // Canvas app - direct value
@@ -304,13 +303,13 @@ export async function getEvents(
           newEvent.eventTypeName = eventTypeValue as string;
           // Store the eventTypeField for filtering
           newEvent[keys.eventTypeField] = eventTypeValue;
-          console.log(`Stored event type for ${recordId}:`, newEvent[keys.eventTypeField]);
+          // removed debug log: stored event type for record
         }
       }
     }
 
     newEvents.push(newEvent);
   }
-  console.log(`getEvents: newEvents.length: ${newEvents.length}`);
+  // removed debug log: events length
   return newEvents;
 }
