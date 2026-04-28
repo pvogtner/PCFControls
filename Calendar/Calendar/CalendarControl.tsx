@@ -1,8 +1,10 @@
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 import "./css/react-big-calendar.override.css";
 import * as React from "react";
 import { IInputs } from "./generated/ManifestTypes";
-import { Calendar, momentLocalizer, View, SlotInfo, EventProps,  ResourceHeaderProps } from "react-big-calendar";
+import { Calendar, momentLocalizer, View, SlotInfo, EventProps, ResourceHeaderProps, CalendarProps } from "react-big-calendar";
+import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
 import * as CalendarUtils from "./utils";
 import { StartOfWeek } from "date-arithmetic";
 import { IEvent, Resource } from "./types";
@@ -10,16 +12,22 @@ import GetMessages from "./components/Translations";
 import * as moment from "moment";
 import { useCalendarHourRange, useDayLayoutAlgorithm, useEventSelectable, useCalendarSelectable, useCalendarStepAndTimeslots, useCalendarDate, useCalendarPopup, useEventHeaderFormat, useCalendarView, useCalendarData, useCalendarColors, useResourceFilter, useEventTypeFilter } from "./hooks";
 import { eventPropsGetter, dayPropsGetter } from "./getters";
-import { handleSlotSelect, handleEventSelected, handleEventKeyPress, handleOnView, handleNavigate } from "./handlers";
+import { handleSlotSelect, handleEventSelected, handleEventKeyPress, handleOnView, handleNavigate, handleEventDrop, handleEventResize } from "./handlers";
 import { timeGutterHeaderRenderer, resourceHeaderRenderer, agendaEventRenderer,timeSlotWrapperRenderer } from "./renderers";
 import { tooltipAccessor } from "./accessors/tooltipAccessor";
 import { ResourceFilter } from "./components/ResourceFilter";
 import { EventTypeFilter } from "./components/EventTypeFilter";
 
+const DnDCalendar = withDragAndDrop<IEvent, Resource>(
+  Calendar as unknown as React.ComponentType<CalendarProps<IEvent, Resource>>
+);
+
 export interface IProps {
   pcfContext: ComponentFramework.Context<IInputs>;
   onClickSelectedRecord: (recordId: string) => void;
   onClickSlot: (start: Date, end: Date, resourceId: string) => void;
+  onEventDrop: (eventId: string, start: Date, end: Date, resourceId: string, isAllDay: boolean) => void;
+  onEventResize: (eventId: string, start: Date, end: Date, resourceId: string, isAllDay: boolean) => void;
   onCalendarChange: (
     date: Date,
     rangeStart: Date,
@@ -116,6 +124,27 @@ export const CalendarControl: React.FC<IProps> = (props) => {
 
   const _handleOnView = handleOnView(setCalendarViewString);
 
+  const updateEventInState = (eventId: string, start: Date, end: Date, resourceId: string, isAllDay: boolean) => {
+    setCalendarData(prev => ({
+      ...prev,
+      events: prev.events.map(ev =>
+        ev.id === eventId
+          ? { ...ev, start, end, allDay: isAllDay, ...(resourceId ? { resource: resourceId } : {}) }
+          : ev
+      ),
+    }));
+  };
+
+  const _handleEventDrop = handleEventDrop((eventId, start, end, resourceId, isAllDay) => {
+    updateEventInState(eventId, start, end, resourceId, isAllDay);
+    props.onEventDrop(eventId, start, end, resourceId, isAllDay);
+  }, props.pcfContext, calendarData.keys);
+
+  const _handleEventResize = handleEventResize((eventId, start, end, resourceId, isAllDay) => {
+    updateEventInState(eventId, start, end, resourceId, isAllDay);
+    props.onEventResize(eventId, start, end, resourceId, isAllDay);
+  }, props.pcfContext, calendarData.keys);
+
   const _onCalendarChange = () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const ref = calendarRef.current as any;
@@ -190,7 +219,7 @@ export const CalendarControl: React.FC<IProps> = (props) => {
       )}
       
       <div style={{ flex: 1, overflow: 'auto', minHeight: 0, position: 'relative' }}>
-        <Calendar
+        <DnDCalendar
           selectable={calendarSelectable}
           popup={true}
           localizer={localizer}
@@ -213,6 +242,9 @@ export const CalendarControl: React.FC<IProps> = (props) => {
           onSelectSlot={_handleSlotSelect}
           onNavigate={_handleNavigate}
           onView={_handleOnView}
+          onEventDrop={_handleEventDrop}
+          onEventResize={_handleEventResize}
+          resizable
           ref={calendarRef}
           className={`rbc-view-${calendarView}`}
           eventPropGetter={_eventPropsGetter}

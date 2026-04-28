@@ -53,6 +53,13 @@
     <property name="currentCalendarView" display-name-key="(Output) Calendar View" description-key="Provides the current view the calendar is set to." usage="output" of-type="SingleLine.Text" required="false" />
     <property name="actionSlotSelected" display-name-key="(Output) Empty Time Slot Was Selected" description-key="Provides the Canvas app producer notification that an empty time slot was selected on the calendar." usage="output" of-type="TwoOptions" required="false" />
     <property name="actionRecordSelected" display-name-key="(Output) Record was selected" description-key="Provides the Canvas app producer notification that a record was selected on the calendar." usage="output" of-type="TwoOptions" required="false" />
+    <property name="actionEventDropped" display-name-key="(Output) Event was dropped" description-key="Provides notification that an event was moved via drag and drop." usage="output" of-type="TwoOptions" required="false" />
+    <property name="actionEventResized" display-name-key="(Output) Event was resized" description-key="Provides notification that an event was resized via drag and drop." usage="output" of-type="TwoOptions" required="false" />
+    <property name="droppedEventId" display-name-key="(Output) Dropped Event Id" description-key="The Id of the event that was dragged/resized." usage="output" of-type="SingleLine.Text" required="false" />
+    <property name="droppedEventStart" display-name-key="(Output) Dropped Event Start" description-key="The new start date/time of the dropped or resized event." usage="output" of-type="DateAndTime.DateAndTime" required="false" />
+    <property name="droppedEventEnd" display-name-key="(Output) Dropped Event End" description-key="The new end date/time of the dropped or resized event." usage="output" of-type="DateAndTime.DateAndTime" required="false" />
+    <property name="droppedEventResourceId" display-name-key="(Output) Dropped Event Resource Id" description-key="The new resource Id of the dropped event, if applicable." usage="output" of-type="SingleLine.Text" required="false" />
+    <property name="droppedEventIsAllDay" display-name-key="(Output) Dropped Event Is All Day" description-key="Whether the dropped event was moved to an all-day slot." usage="output" of-type="TwoOptions" required="false" />
     <resources>
       <code path="index.ts" order="1" />
     </resources>

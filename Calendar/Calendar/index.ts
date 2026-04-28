@@ -21,6 +21,14 @@ export class Calendar implements ComponentFramework.StandardControl<IInputs, IOu
 	private _currentCalendarDate: Date;
 	private _currentCalendarView: string;
 
+	private _actionEventDropped: boolean;
+	private _actionEventResized: boolean;
+	private _droppedEventId: string;
+	private _droppedEventStart: Date | undefined;
+	private _droppedEventEnd: Date | undefined;
+	private _droppedEventResourceId: string;
+	private _droppedEventIsAllDay: boolean;
+
 	private _updateFromOutput: boolean;
 	private _notifyOutputChanged: () => void;
 	
@@ -55,6 +63,11 @@ export class Calendar implements ComponentFramework.StandardControl<IInputs, IOu
 		this._selectedRecordId = '';
 		this._actionRecordSelected = false;
 		this._actionSlotSelected = false;
+		this._actionEventDropped = false;
+		this._actionEventResized = false;
+		this._droppedEventId = '';
+		this._droppedEventResourceId = '';
+		this._droppedEventIsAllDay = false;
 
 		this._updateFromOutput = false;
 
@@ -62,6 +75,8 @@ export class Calendar implements ComponentFramework.StandardControl<IInputs, IOu
 			pcfContext: this._context,
 			onClickSelectedRecord: this.onClickSelectedRecord.bind(this),
 			onClickSlot: this.onClickSelectedSlot.bind(this),
+			onEventDrop: this.onEventDrop.bind(this),
+			onEventResize: this.onEventResize.bind(this),
 			onCalendarChange: this.onDateChange.bind(this),
 		}
 		
@@ -158,6 +173,28 @@ export class Calendar implements ComponentFramework.StandardControl<IInputs, IOu
 		this._notifyOutputChanged();
 	}
 
+	public onEventDrop(eventId: string, start: Date, end: Date, resourceId: string, isAllDay: boolean)
+	{
+		this._droppedEventId = eventId;
+		this._droppedEventStart = start;
+		this._droppedEventEnd = end;
+		this._droppedEventResourceId = resourceId;
+		this._droppedEventIsAllDay = isAllDay;
+		this._actionEventDropped = true;
+		this._notifyOutputChanged();
+	}
+
+	public onEventResize(eventId: string, start: Date, end: Date, resourceId: string, isAllDay: boolean)
+	{
+		this._droppedEventId = eventId;
+		this._droppedEventStart = start;
+		this._droppedEventEnd = end;
+		this._droppedEventResourceId = resourceId;
+		this._droppedEventIsAllDay = isAllDay;
+		this._actionEventResized = true;
+		this._notifyOutputChanged();
+	}
+
 	/** 
 	 * It is called by the framework prior to a control receiving new data. 
 	 * @returns an object based on nomenclature defined in manifest, expecting object[s] for property marked as “bound” or “output”
@@ -173,7 +210,9 @@ export class Calendar implements ComponentFramework.StandardControl<IInputs, IOu
 			currentCalendarDate: this._currentCalendarDate,
 			currentCalendarView: this._currentCalendarView,
 			actionRecordSelected : this._actionRecordSelected,
-			actionSlotSelected : this._actionSlotSelected			
+			actionSlotSelected : this._actionSlotSelected,
+			actionEventDropped: this._actionEventDropped,
+			actionEventResized: this._actionEventResized
 		}
 		
 		if (this._actionRecordSelected){
@@ -191,6 +230,30 @@ export class Calendar implements ComponentFramework.StandardControl<IInputs, IOu
 			output.selectedSlotEnd = this._selectedSlotEnd;
 			output.selectedSlotResourceId = this._selectedSlotResourceId;
 			this._actionSlotSelected = false;
+		}
+
+		if (this._actionEventDropped)
+		{
+			notifyAgain = true;
+			output.actionEventDropped = true;
+			output.droppedEventId = this._droppedEventId;
+			output.droppedEventStart = this._droppedEventStart;
+			output.droppedEventEnd = this._droppedEventEnd;
+			output.droppedEventResourceId = this._droppedEventResourceId;
+			output.droppedEventIsAllDay = this._droppedEventIsAllDay;
+			this._actionEventDropped = false;
+		}
+
+		if (this._actionEventResized)
+		{
+			notifyAgain = true;
+			output.actionEventResized = true;
+			output.droppedEventId = this._droppedEventId;
+			output.droppedEventStart = this._droppedEventStart;
+			output.droppedEventEnd = this._droppedEventEnd;
+			output.droppedEventResourceId = this._droppedEventResourceId;
+			output.droppedEventIsAllDay = this._droppedEventIsAllDay;
+			this._actionEventResized = false;
 		}
 		
 		if (notifyAgain){

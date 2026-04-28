@@ -326,3 +326,14 @@
 .rbc-date-cell.rbc-now .rbc-button-link {
   font-style: italic !important;
 }
+
+/* Drag and Drop overrides */
+/* Keep the original event visible (dimmed) while dragging instead of invisible */
+.rbc-addons-dnd .rbc-addons-dnd-dragged-event {
+  opacity: 0.3 !important;
+}
+
+/* Reduce dimming on non-dragged events while a drag is in progress */
+.rbc-addons-dnd.rbc-addons-dnd-is-dragging .rbc-event:not(.rbc-addons-dnd-dragged-event):not(.rbc-addons-dnd-drag-preview) {
+  opacity: 0.75 !important;
+}
